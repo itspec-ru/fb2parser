@@ -105,11 +105,11 @@ public class FictionBook {
     // Новый конструктор для работы со строкой XML
     public FictionBook(String xmlContent) throws ParserConfigurationException, IOException, SAXException {
         InputSource is = new InputSource(new StringReader(xmlContent));
-        
+
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         DocumentBuilder db = dbf.newDocumentBuilder();
         Document doc = db.parse(is);
-        
+
         initXmlns(doc);
         description = new Description(doc);
         NodeList bodyNodes = doc.getElementsByTagName("body");
@@ -193,7 +193,6 @@ public class FictionBook {
         }
         return bodies.get(0);
     }
-
 
     public Map<String, Binary> getBinaries() {
         return binaries == null ? new HashMap<String, Binary>() : binaries;
