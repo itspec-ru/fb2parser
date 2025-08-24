@@ -11,6 +11,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class FictionBook {
@@ -77,6 +78,52 @@ public class FictionBook {
         }
     }
 
+    // Новый конструктор для работы с данными в памяти
+    public FictionBook(byte[] xmlData) throws ParserConfigurationException, IOException, SAXException {
+        String encoding = detectEncodingFromBytes(xmlData);
+        InputSource is = new InputSource(new ByteArrayInputStream(xmlData));
+        is.setEncoding(encoding);
+
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document doc = db.parse(is);
+
+        initXmlns(doc);
+        description = new Description(doc);
+        NodeList bodyNodes = doc.getElementsByTagName("body");
+        for (int item = 0; item < bodyNodes.getLength(); item++) {
+            bodies.add(new Body(bodyNodes.item(item)));
+        }
+        NodeList binary = doc.getElementsByTagName("binary");
+        for (int item = 0; item < binary.getLength(); item++) {
+            if (binaries == null) binaries = new HashMap<>();
+            Binary binary1 = new Binary(binary.item(item));
+            binaries.put(binary1.getId().replace("#", ""), binary1);
+        }
+    }
+
+    // Новый конструктор для работы со строкой XML
+    public FictionBook(String xmlContent) throws ParserConfigurationException, IOException, SAXException {
+        InputSource is = new InputSource(new StringReader(xmlContent));
+        
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document doc = db.parse(is);
+        
+        initXmlns(doc);
+        description = new Description(doc);
+        NodeList bodyNodes = doc.getElementsByTagName("body");
+        for (int item = 0; item < bodyNodes.getLength(); item++) {
+            bodies.add(new Body(bodyNodes.item(item)));
+        }
+        NodeList binary = doc.getElementsByTagName("binary");
+        for (int item = 0; item < binary.getLength(); item++) {
+            if (binaries == null) binaries = new HashMap<>();
+            Binary binary1 = new Binary(binary.item(item));
+            binaries.put(binary1.getId().replace("#", ""), binary1);
+        }
+    }
+
     protected void setXmlns(ArrayList<Node> nodeList) {
         xmlns = new Xmlns[nodeList.size()];
         for (int index = 0; index < nodeList.size(); index++) {
@@ -96,6 +143,22 @@ public class FictionBook {
             }
         }
         setXmlns(xmlns);
+    }
+
+    // Метод для определения кодировки из байтового массива
+    private String detectEncodingFromBytes(byte[] data) {
+        // Анализируем первые 1024 байта для определения кодировки
+        String header = new String(data, 0, Math.min(data.length, 1024), StandardCharsets.UTF_8);
+        int encodingStart = header.indexOf("encoding=\"");
+        if (encodingStart != -1) {
+            encodingStart += 10; // Длина "encoding=""
+            int encodingEnd = header.indexOf('"', encodingStart);
+            if (encodingEnd != -1) {
+                return header.substring(encodingStart, encodingEnd);
+            }
+        }
+        // По умолчанию используем UTF-8
+        return "UTF-8";
     }
 
     public ArrayList<Person> getAuthors() {
@@ -131,6 +194,7 @@ public class FictionBook {
         return bodies.get(0);
     }
 
+
     public Map<String, Binary> getBinaries() {
         return binaries == null ? new HashMap<String, Binary>() : binaries;
     }
@@ -145,5 +209,10 @@ public class FictionBook {
 
     public  Annotation getAnnotation() {
         return description.getTitleInfo().getAnnotation();
+    }
+
+    // Новый метод для доступа к bodies
+    public List<Body> getBodies() {
+        return Collections.unmodifiableList(bodies);
     }
 }

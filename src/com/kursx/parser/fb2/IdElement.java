@@ -20,7 +20,6 @@ public class IdElement {
         }
     }
 
-
     public String getId() {
         return id;
     }
