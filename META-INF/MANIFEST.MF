@@ -1,3 +1,7 @@
 Manifest-Version: 1.0
-Main-Class: Main
-
+Created-By: Kurs Stanislav
+Implementation-Title: Fb2 parser
+Implementation-Version: 0.6.1
+Implementation-Vendor: kursx.net
+Documentation: docs/README.md
+License: docs/LICENSE
